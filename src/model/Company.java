@@ -1,13 +1,8 @@
 package model;
 
+import java.time.LocalDateTime;
 import java.util.*;
-
-import customExceptions.AlreadyAddedException;
-import customExceptions.CantPassAttendTurnToGivenTurn;
-import customExceptions.InvalidDocumentTypeException;
-import customExceptions.RequiredFieldsException;
-import customExceptions.TurnNotFountException;
-import customExceptions.WithOutRegisterException;
+import customExceptions.*;
 
 /**
  * 
@@ -21,29 +16,44 @@ public class Company {
 	private ArrayList<User> users;
 	private int counterGiven;
 	private int counterAttend;
+	private ArrayList<TurnType> types;
+	private DateAnHour date;
+	private int[] plusDate; 
 	/**
 	 * The constructor of the class, it will be the initial state of the program
 	 */
 	public Company() {
-		actualTurnAttend = new Turn("A00");
-		previusTurnGiven = new Turn("A0/");
+		TurnType initial = new TurnType("initial", 0);
+		actualTurnAttend = new Turn("A00", initial, null);
+		previusTurnGiven = new Turn("A0/", initial, null);
 		users = new ArrayList<User>();
+		types = new ArrayList<TurnType>();
 		counterAttend = 0;
 		counterGiven = 0;
+		LocalDateTime ahora= LocalDateTime.now();
+	    int year = ahora.getYear();
+	    int month = ahora.getMonthValue();
+	    int day = ahora.getDayOfMonth();
+	    int hour = ahora.getHour();
+	    int minute = ahora.getMinute();
+	    int second = ahora.getSecond();
+	    
+		date = new DateAnHour(year, month, day, hour, minute, second);
+		plusDate = new int[6];
 	}
 	
 	/**
 	 * This constructor is for the test
 	 * @param given: is the previus turn given to a user
 	 */
-	public Company(String given) {
-		actualTurnAttend = new Turn("A00");
-		previusTurnGiven = new Turn(given);
+	public Company(String given, TurnType type) {TurnType initial = new TurnType("initial", 0);
+	actualTurnAttend = new Turn("A00", initial, null);
+	previusTurnGiven = new Turn(given, type, null);
 		users = new ArrayList<User>();
 		counterAttend = 0;
 		counterGiven = 0;
 	}
-
+	
 	/**
 	 * @return the counterGiven
 	 */
@@ -77,9 +87,7 @@ public class Company {
 	 */
 	public Turn getPreviusTurnGiven() {
 		return previusTurnGiven;
-	}
-	
-	
+	}	
 
 	/**
 	 * @param previusTurngiven the previusTurngiven to set
@@ -88,12 +96,9 @@ public class Company {
 		this.previusTurnGiven = previusTurngiven;
 	}
 	
-
-	
 	public Turn getActualTurnAttend() {
 		return actualTurnAttend;
-	}
-	
+	}	
 
 	/**
 	 * @param previusTurngiven the previusTurngiven to set
@@ -116,6 +121,8 @@ public class Company {
 		this.users = users;
 	}
 
+
+
 	public boolean addUser(DocumentType documentType, String documentNumber, String firstName, String secondName, String dt)
 			throws RequiredFieldsException, InvalidDocumentTypeException, AlreadyAddedException {
 		boolean added = false;
@@ -135,10 +142,12 @@ public class Company {
 		return added; 
 	}
 		
-	public void advanceGivenTurn() {
+	public void advanceGivenTurn(TurnType type) {
 		String newpreviusTurngiven = advance(previusTurnGiven.getTurn());
-		counterGiven++;
-		previusTurnGiven = new Turn(newpreviusTurngiven);
+		counterGiven++; 
+		
+	    
+		previusTurnGiven = new Turn(newpreviusTurngiven, type, date);
 	}
 	
 	public void advanceActualTurn() 
@@ -148,8 +157,78 @@ public class Company {
 		}
 		String newActualTurnAttend = advance(actualTurnAttend.getTurn());
 		counterAttend++;
-		actualTurnAttend = new Turn(newActualTurnAttend);
+		TurnType type = null;
+		DateAnHour date = null;
+		for (int i = 0; i < users.size(); i++) {
+			if (users.get(i).getPersonalTurn().getTurn().equals(newActualTurnAttend)) {
+				type = users.get(i).getPersonalTurn().getType();
+				date = users.get(i).getPersonalTurn().getDate();
+			}
+		}
+		actualTurnAttend = new Turn(newActualTurnAttend, type, date);
 		
+	}
+	
+	public int whatMonth() {
+		int days = 0;
+		switch (date.getMonth()) {
+			case 1:
+			case 3:
+			case 5:
+			case 7:
+			case 8:
+			case 10:
+			case 12:
+				days = 31;
+			break;
+			case 2:
+				days = 28;
+			break;
+			case 4:
+			case 6:
+			case 9:
+			case 11:
+				days = 30;
+		}
+		return days;
+	}
+	
+	public void passTime(int year, int month, int day, int hour, int minute, int second) throws CantGoToPastException, DoingNothingException, InvalidFormatException {
+		int days = whatMonth();
+		if (second > 60 || minute > 60 || hour > 24 || day > days || month > 12) {
+			throw new InvalidFormatException();
+		}
+		if (year > date.getYear()) {
+			throw new CantGoToPastException("Year");
+		} else if(year == date.getYear()) {
+			if (month > date.getMonth()) {
+				throw new CantGoToPastException("Month");
+			} else if (month == date.getMonth()) {
+				if (day > date.getDay()) {
+					throw new CantGoToPastException("Day");
+				} else  if (day == date.getDay()) {
+					if (hour > date.getHour()) {
+						throw new CantGoToPastException("Hour");
+					} else if (hour == date.getHour()) {
+						if (minute > date.getMinute()) {
+							throw new CantGoToPastException("Minute");
+						} else if (minute == date.getMinute()) {
+							if (second > date.getSecond()) {
+								throw new CantGoToPastException("Second");
+							} else if (second == date.getSecond()) {
+								throw new DoingNothingException();
+							}
+						}
+					}
+				}
+			}
+		}
+		plusDate[5] = second;
+		plusDate[4] = minute;
+		plusDate[3] = hour;
+		plusDate[2] = day;
+		plusDate[1] = month;
+		plusDate[0] = year;	
 	}
 	
 	public String consultNextAttendTurn() {
@@ -267,15 +346,21 @@ public class Company {
 	}
 
 	
-	public String alreadyRegist(String dn, DocumentType dt) 
+	public String alreadyRegist(String dn, DocumentType dt, String type) 
 			throws WithOutRegisterException {
 		User user = searchUser(dn, dt);
 		String msg = "";
 		msg += "Search result\n";
 		msg += user.toString(); 
+		TurnType typeOf = null; 
+		for (int i = 0; i < types.size(); i++) {
+			if (types.get(i).getName().equalsIgnoreCase(type)) {
+				typeOf = types.get(i);
+			}
+		}
 		if (user.getPersonalTurn() == null) {
 			msg += "The assigned turn for "+userGetName(user)+" is: ";
-			advanceGivenTurn();
+			advanceGivenTurn(typeOf);
 			msg += getActualTurnAttend().getTurn();
 			user.setPersonalTurn(getPreviusTurnGiven());
 			user.advanceTurn();
@@ -361,5 +446,78 @@ public class Company {
 			throw new CantPassAttendTurnToGivenTurn();
 		}	
 	}
+
+	public void aleatoryUsers(int many) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public String showTime() {
+		String msg = "The actual date is:\n";
+		msg += date.toString();
+		return msg;
+	}
+
+	public void actualizeTime() {
+		int dayss = whatMonth();
+		int sec = plusDate[5] % 60;
+		int min = plusDate[4] % 60;
+		int hor = plusDate[3] % 24;
+		int day = plusDate[2] % dayss;
+		int mon = plusDate[1] % 12;
+		int yea = plusDate[0];
+		if (plusDate[5] > 60) {
+			int mins = plusDate[5] / 60;
+			if (mins == 0) {
+				mins = 1;
+			}
+			min += mins;
+		}
+		if (plusDate[4] > 60) {
+			int hors = plusDate[4] / 60;
+			if (hors == 0) {
+				hors = 1;
+			}
+			hor += hors;
+		}
+		if (plusDate[3] > 24) {
+			int days = plusDate[3] / 24;
+			if (days == 0) {
+				days = 1;
+			}
+			day += days;
+		}
+		if (plusDate[2] > dayss) {
+			int mons = plusDate[2] / dayss;
+			if (mons == 0) {
+				mons = 1;
+			}
+			mon += mons;
+		} 
+		if (plusDate[1] > 12) {
+			int yeas = plusDate[1] / 12;
+			if (yeas == 0) {
+				yeas = 1;
+			}
+			yea += yeas;
+		}
+		date.setYear(yea);
+		date.setMonth(mon);
+		date.setDay(day);
+		date.setHour(hor);
+		date.setMinute(min);
+		date.setSecond(sec);
+	}
+		
+	
+
+	public int[] getPlusDate() {
+		return plusDate;
+	}
+
+	public void setPlusDate(int[] plusDate) {
+		this.plusDate = plusDate;
+	}
+	
 	
 }

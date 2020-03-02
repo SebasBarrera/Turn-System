@@ -1,8 +1,9 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
-public class User {
+public class User implements Comparator<User>{
 	
 	private DocumentType documentType;
 	private String documentNumber;
@@ -232,6 +233,12 @@ public class User {
 	public void advanceTurn() {
 		counterTurns++;
 		
+	}
+
+	@Override
+	public int compare(User o1, User o2) {
+		return o1.getPersonalTurn().getTurn().compareTo(o2.getPersonalTurn().getTurn());
+
 	}
 	
 }
