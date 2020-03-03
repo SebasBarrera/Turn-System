@@ -1,9 +1,8 @@
 package model;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 
-public class User implements Comparator<User>{
+public class User implements Comparable<User>{
 	
 	private DocumentType documentType;
 	private String documentNumber;
@@ -235,10 +234,21 @@ public class User implements Comparator<User>{
 		
 	}
 
-	@Override
-	public int compare(User o1, User o2) {
-		return o1.getPersonalTurn().getTurn().compareTo(o2.getPersonalTurn().getTurn());
+	public int compareById(User arg0) {
+		int ret = 0;		
+		ret = this.documentNumber.compareTo(arg0.getFirstName());	
+		return ret;
+	}
+	
+	public int compareByFirstName(User arg0) {
+		return this.firstName.compareTo(arg0.getFirstName());
+	}
 
+	@Override
+	public int compareTo(User o) {
+		
+
+		return 0;
 	}
 	
 }

@@ -1,5 +1,8 @@
 package model;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
 public class DateAnHour {
 	private int year;
 	private int month;
@@ -100,6 +103,34 @@ public class DateAnHour {
 		return year+"/"+month+"/"+day+"    "+hour+":"+minute+":"+second;
 	}
 	
+	public long compareDatesInMillis(DateAnHour arg0) {
+		GregorianCalendar real = new GregorianCalendar();
+		GregorianCalendar plus = new GregorianCalendar();
+		real.set(year, month, day, hour, minute, second);
+		plus.set(arg0.getYear(), arg0.getMonth(), arg0.getDay(), arg0.getHour(), arg0.getMinute(), arg0.getSecond());
+		long currentMillis = plus.getTimeInMillis() - real.getTimeInMillis();
+		return currentMillis;	
+	}
 	
+	public DateAnHour millisToDate(long time) {
+		DateAnHour date;
+		GregorianCalendar dt = new GregorianCalendar();
+		dt.set(year, month, day, hour, minute, second);
+		dt.roll(Calendar.MILLISECOND, (int)time);
+		date = new DateAnHour(dt.get(Calendar.YEAR), dt.get(Calendar.MONTH), dt.get(Calendar.DAY_OF_MONTH), 
+				dt.get(Calendar.HOUR_OF_DAY), dt.get(Calendar.MINUTE), dt.get(Calendar.SECOND));
+		return date;
+	}
+
+	public DateAnHour doubleToDate(double time) {
+		DateAnHour date;
+		GregorianCalendar dt = new GregorianCalendar();
+		dt.set(year, month, day, hour, minute, second);
+		int tm =  (int)time*60;
+		dt.roll(Calendar.MILLISECOND, tm);
+		date = new DateAnHour(dt.get(Calendar.YEAR), dt.get(Calendar.MONTH), dt.get(Calendar.DAY_OF_MONTH), 
+				dt.get(Calendar.HOUR_OF_DAY), dt.get(Calendar.MINUTE), dt.get(Calendar.SECOND));
+		return date;
+	}
 	
 }

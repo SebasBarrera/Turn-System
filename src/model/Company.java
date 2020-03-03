@@ -1,5 +1,6 @@
 package model;
 
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import customExceptions.*;
@@ -18,7 +19,7 @@ public class Company {
 	private int counterAttend;
 	private ArrayList<TurnType> types;
 	private DateAnHour date;
-	private int[] plusDate; 
+	private long difference;
 	/**
 	 * The constructor of the class, it will be the initial state of the program
 	 */
@@ -30,16 +31,15 @@ public class Company {
 		types = new ArrayList<TurnType>();
 		counterAttend = 0;
 		counterGiven = 0;
-		LocalDateTime ahora= LocalDateTime.now();
-	    int year = ahora.getYear();
-	    int month = ahora.getMonthValue();
-	    int day = ahora.getDayOfMonth();
-	    int hour = ahora.getHour();
-	    int minute = ahora.getMinute();
-	    int second = ahora.getSecond();
-	    
+		LocalDateTime now= LocalDateTime.now();
+	    int year = now.getYear();
+	    int month = now.getMonthValue();
+	    int day = now.getDayOfMonth();
+	    int hour = now.getHour();
+	    int minute = now.getMinute();
+	    int second = now.getSecond();
+	    difference = 0;
 		date = new DateAnHour(year, month, day, hour, minute, second);
-		plusDate = new int[6];
 	}
 	
 	/**
@@ -195,9 +195,16 @@ public class Company {
 	
 	public void passTime(int year, int month, int day, int hour, int minute, int second) throws CantGoToPastException, DoingNothingException, InvalidFormatException {
 		int days = whatMonth();
-		if (second > 60 || minute > 60 || hour > 24 || day > days || month > 12) {
+		if (year == 0) 
+			year = date.getYear();
+		if (month == 0) 
+			month = date.getMonth();
+		if (day == 0) 
+			day = date.getDay();
+		if (hour == 0)
+			hour = date.getHour();		
+		if (second > 60 || minute > 60 || hour > 24 || day > days || month > 12) 
 			throw new InvalidFormatException();
-		}
 		if (year > date.getYear()) {
 			throw new CantGoToPastException("Year");
 		} else if(year == date.getYear()) {
@@ -222,13 +229,8 @@ public class Company {
 					}
 				}
 			}
-		}
-		plusDate[5] = second;
-		plusDate[4] = minute;
-		plusDate[3] = hour;
-		plusDate[2] = day;
-		plusDate[1] = month;
-		plusDate[0] = year;	
+		}	
+		difference += date.compareDatesInMillis(new DateAnHour(year, month, day, hour, minute, second));
 	}
 	
 	public String consultNextAttendTurn() {
@@ -447,77 +449,129 @@ public class Company {
 		}	
 	}
 
-	public void aleatoryUsers(int many) {
-		// TODO Auto-generated method stub
+	public void aleatoryUsers(int many, String fn, String index) throws IOException {
+		boolean contiene = false;
+		File archivo = new File(fn);
+		FileReader reader = new FileReader(archivo);
+		BufferedReader lector = new BufferedReader(reader);
+		String line = lector.readLine();
+		int i = 0;
+		while (line != null && !contiene && i<many) {
+			int aleatoryN =  (int) (Math.random()*5);
+			DocumentType documentType = null;
+			switch (aleatoryN) {
+			case 0:
+				documentType = DocumentType.CC;
+			break;
+			case 1:
+				documentType = DocumentType.CE;
+			break;
+			case 2:
+				documentType = DocumentType.TI;
+			break;
+			case 3:
+				documentType = DocumentType.PA;
+			break;
+			case 4:
+				documentType = DocumentType.RC;
+			}
+			String dn = 10000000 + (int) (Math.random()*990000000) + "";
+			String[] datos = line.split(index);
+			String firstName = datos[0];
+			String lastName = datos[1];
+			User newUser = new User(documentType, dn, firstName, lastName);
+			users.add(newUser);
+			i++;
+		}
+		lector.close();
+		reader.close();
+	}	
 		
-	}
+	
 
 	public String showTime() {
 		String msg = "The actual date is:\n";
 		msg += date.toString();
 		return msg;
 	}
-
-	public void actualizeTime() {
-		int dayss = whatMonth();
-		int sec = plusDate[5] % 60;
-		int min = plusDate[4] % 60;
-		int hor = plusDate[3] % 24;
-		int day = plusDate[2] % dayss;
-		int mon = plusDate[1] % 12;
-		int yea = plusDate[0];
-		if (plusDate[5] > 60) {
-			int mins = plusDate[5] / 60;
-			if (mins == 0) {
-				mins = 1;
-			}
-			min += mins;
-		}
-		if (plusDate[4] > 60) {
-			int hors = plusDate[4] / 60;
-			if (hors == 0) {
-				hors = 1;
-			}
-			hor += hors;
-		}
-		if (plusDate[3] > 24) {
-			int days = plusDate[3] / 24;
-			if (days == 0) {
-				days = 1;
-			}
-			day += days;
-		}
-		if (plusDate[2] > dayss) {
-			int mons = plusDate[2] / dayss;
-			if (mons == 0) {
-				mons = 1;
-			}
-			mon += mons;
-		} 
-		if (plusDate[1] > 12) {
-			int yeas = plusDate[1] / 12;
-			if (yeas == 0) {
-				yeas = 1;
-			}
-			yea += yeas;
-		}
-		date.setYear(yea);
-		date.setMonth(mon);
-		date.setDay(day);
-		date.setHour(hor);
-		date.setMinute(min);
-		date.setSecond(sec);
-	}
-		
 	
 
-	public int[] getPlusDate() {
-		return plusDate;
+	public void actualizeTime() {
+		LocalDateTime now = LocalDateTime.now();
+		date.setSecond(now.getSecond());
+		date.setMinute(now.getMinute());
+		date.setHour(now.getHour());
+		date.setDay(now.getDayOfMonth());
+		date.setMonth(now.getMonthValue());
+		date.setYear(now.getYear());
+		date = date.millisToDate(difference);
 	}
 
-	public void setPlusDate(int[] plusDate) {
-		this.plusDate = plusDate;
+	@SuppressWarnings("unchecked")
+	public void loadUsers() throws FileNotFoundException, IOException, ClassNotFoundException {
+		ObjectInputStream ois = new ObjectInputStream(new FileInputStream("nombre del archivo"));
+		users = (ArrayList<User>)ois.readObject();
+		ois.close();
+		
 	}
+
+	public void saveRooms() throws FileNotFoundException, IOException {
+		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("nombre del archivo"));
+		oos.writeObject(users);
+		oos.close();
+		
+	}
+	
+	public void orderByIdBubbleSort() {
+		for (int i = users.size(); i > 0; i--) {
+			for (int j = 0; j < i-1; j++) {
+				if (users.get(j).compareById(users.get(j+1))>0) {
+					User temp = users.get(j);
+					users.set(j, users.get(j+1));
+					users.set(j+1, temp);
+				}
+			}
+		}
+	}
+	
+	public void orderByFirstNameInsertionSort() {
+		for (int i = 1; i < users.size(); i++) {
+			User toInsert = users.get(i);
+			boolean finish = false;
+			for (int j = i; j > 0 && !finish; j--) {
+				User actual = users.get(j-1);
+				if (actual.compareByFirstName(toInsert) > 0) {
+					users.set(j, actual);
+					users.set(j-1, toInsert);
+				} else {
+					finish = true;
+				}
+			}
+		}
+	}
+
+	public long getDifference() {
+		return difference;
+	}
+
+	public void setDifference(long difference) {
+		this.difference = difference;
+	}
+
+	public String showTurnTypes() {
+		String msg = "";
+		for (int i = 0; i < types.size(); i++) {
+			msg += types.get(i).getName() + "\n";
+		}
+		return msg;
+	}
+
+	public void createNewType(String name, double time) {
+		types.add(new TurnType(name, time));
+		
+	}
+	
+	
 	
 	
 }
