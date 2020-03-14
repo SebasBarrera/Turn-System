@@ -221,6 +221,14 @@ public class User implements Comparable<User>{
 		return msg;
 	}
 	
+	public String showInfoTurn() {
+		String msg = "";
+		for (int i = 0; i < turns.size(); i++) {
+			msg
+		}
+		return msg;
+	}
+	
 	public int getCounterTurns() {
 		return counterTurns;
 	}
@@ -246,9 +254,7 @@ public class User implements Comparable<User>{
 
 	@Override
 	public int compareTo(User o) {
-		
-
-		return 0;
+		return this.lastName.compareTo(o.getLastName());
 	}
 	
 }

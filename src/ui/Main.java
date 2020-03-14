@@ -26,7 +26,7 @@ public class Main {
 		System.out.println("Choose an option");
 		System.out.println();
 		System.out.println("1. Add a new user");
-		System.out.println("2. Take a turn");
+		System.out.println("2. Take turns");
 		System.out.println("3. Attend a turn");
 		System.out.println("4. Create a new turn type");
 		System.out.println("5. Generate a new report");
@@ -104,14 +104,14 @@ public class Main {
 	
 
 	private void load() {
-		// TODO Auto-generated method stub
+		comp.load();
 		
 	}
 
 	private void save() {
 		try {
 			long initialTime = System.currentTimeMillis();
-			comp.saveRooms();
+			comp.save();
 			long finalTime = System.currentTimeMillis();
 			long time = finalTime - initialTime;
 			System.out.println("This action takes "+time+" milliseconds");
@@ -169,15 +169,11 @@ public class Main {
 
 
 	private void aleatoryUsers() {
-		System.out.println("Write de file name");
-		String fn = sc.nextLine();
-		System.out.println("how is the index that separate the words in the file");
-		String index = sc.nextLine();
-		System.out.println("How many user do you want to create?");
+		System.out.println("How many user do you want to create? // less than a thousand please");
 		int many = sc.nextInt();
 		long initialTime = System.currentTimeMillis();
 		try {
-			comp.aleatoryUsers(many, fn, index);
+			comp.aleatoryUsers(many);
 			long finalTime = System.currentTimeMillis();
 			long time = finalTime - initialTime;
 			System.out.println("This action takes "+time+" milliseconds");
@@ -194,7 +190,7 @@ public class Main {
 		int option = sc.nextInt();
 		System.out.println("Do you want to see de report in:");
 		System.out.println("1. Console");
-		System.out.println("2. text archive");
+		System.out.println("2. text file");
 		int type = sc.nextInt();
 		if (option == 2) {
 			turnUsers(type);
@@ -206,10 +202,20 @@ public class Main {
 		
 	}
 
-	private void turnUsers(int type) {
-		// TODO Auto-generated method stub
+	private void turnUsers(int type) throws InvalidSelectionException {
+	
 		long initialTime = System.currentTimeMillis();
-		
+		if (type == 1) {
+			System.out.println("By what characteristic do you want to order it");
+			
+			System.out.println(comp.turnUsersConsole());
+		}else if(type ==2) {
+			System.out.println("Write the file name");
+			String fn = sc.nextLine();
+			comp.turnUserFile(fn);
+		}else {
+			throw new InvalidSelectionException(type);
+		}
 		long finalTime = System.currentTimeMillis();
 		long time = finalTime - initialTime;
 		System.out.println("This action takes "+time+" milliseconds");
@@ -217,10 +223,31 @@ public class Main {
 		// DEBO MOSTRAR TODOS LOS USUARIOS CON CIERTO TURNO
 	}
 
-	private void userTurns(int type) {
-		// TODO Auto-generated method stub
+	private void userTurns(int type) throws InvalidSelectionException {
 		long initialTime = System.currentTimeMillis();
-		
+		if (type == 1) {
+			System.out.println("Order by:");
+			System.out.println("1.code");
+			System.out.println("2.attend");
+			System.out.println("3.present");
+			int i = sc.nextInt();
+			if (i == 1) {
+				System.out.println(comp.turnUsersConsoleByCode());
+			}else if(i ==2) {
+				System.out.println(comp.turnUsersConsoleByattend());
+			} if (i==3) {
+				System.out.println(comp.turnUsersConsoleByPresent());			
+			}else {
+				throw new InvalidSelectionException(type);
+			}
+			System.out.println(comp.userTurnsConsole());
+		}else if(type ==2) {
+			System.out.println("Write the file name");
+			String fn = sc.nextLine();
+			comp.userTurnsFile(fn);
+		}else {
+			throw new InvalidSelectionException(type);
+		}
 		long finalTime = System.currentTimeMillis();
 		long time = finalTime - initialTime;
 		System.out.println("This action takes "+time+" milliseconds");
@@ -244,7 +271,7 @@ public class Main {
 	}
 
 	public void attendTurns() {
-		System.out.println();
+		System.out.println(comp.attendTurn());
 		
 	}
 

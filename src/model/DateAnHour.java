@@ -1,9 +1,11 @@
 package model;
 
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-public class DateAnHour {
+@SuppressWarnings("serial")
+public class DateAnHour implements Serializable{
 	private int year;
 	private int month;
 	private int day;
@@ -126,11 +128,22 @@ public class DateAnHour {
 		DateAnHour date;
 		GregorianCalendar dt = new GregorianCalendar();
 		dt.set(year, month, day, hour, minute, second);
-		int tm =  (int)time*60;
+		time = time*60;
+		int tm =  (int)time;
 		dt.roll(Calendar.MILLISECOND, tm);
 		date = new DateAnHour(dt.get(Calendar.YEAR), dt.get(Calendar.MONTH), dt.get(Calendar.DAY_OF_MONTH), 
 				dt.get(Calendar.HOUR_OF_DAY), dt.get(Calendar.MINUTE), dt.get(Calendar.SECOND));
 		return date;
 	}
+	
+	public long millis(DateAnHour arg0) {
+		long millis = 0;
+		 GregorianCalendar actual = new GregorianCalendar();
+		 actual.set(year, month, day, hour, minute, second);
+		 
+		return millis;
+	}
+	
+
 	
 }

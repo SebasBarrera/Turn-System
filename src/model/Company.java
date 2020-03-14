@@ -10,7 +10,10 @@ import customExceptions.*;
  * @author sebasbarrera
  * This is the principal class of the model
  */
-public class Company {
+@SuppressWarnings("serial")
+public class Company implements Serializable {
+	
+	public final static String SAVE_FILE_NAME = "data/saves.rolo";
 	
 	private Turn previusTurnGiven;
 	private Turn actualTurnAttend;
@@ -19,6 +22,7 @@ public class Company {
 	private int counterAttend;
 	private ArrayList<TurnType> types;
 	private DateAnHour date;
+	private DateAnHour lastAt;
 	private long difference;
 	/**
 	 * The constructor of the class, it will be the initial state of the program
@@ -40,6 +44,7 @@ public class Company {
 	    int second = now.getSecond();
 	    difference = 0;
 		date = new DateAnHour(year, month, day, hour, minute, second);
+		lastAt = date;
 	}
 	
 	/**
@@ -169,9 +174,12 @@ public class Company {
 		
 	}
 	
-	public int whatMonth() {
+	public int whatMonth(int month,int year) {
 		int days = 0;
-		switch (date.getMonth()) {
+		int leap = 28;
+		if ((year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0)))
+			leap = 29;
+		switch (month) {
 			case 1:
 			case 3:
 			case 5:
@@ -182,7 +190,7 @@ public class Company {
 				days = 31;
 			break;
 			case 2:
-				days = 28;
+				days = leap;
 			break;
 			case 4:
 			case 6:
@@ -194,7 +202,6 @@ public class Company {
 	}
 	
 	public void passTime(int year, int month, int day, int hour, int minute, int second) throws CantGoToPastException, DoingNothingException, InvalidFormatException {
-		int days = whatMonth();
 		if (year == 0) 
 			year = date.getYear();
 		if (month == 0) 
@@ -202,7 +209,8 @@ public class Company {
 		if (day == 0) 
 			day = date.getDay();
 		if (hour == 0)
-			hour = date.getHour();		
+			hour = date.getHour();	
+		int days = whatMonth(month, year);
 		if (second > 60 || minute > 60 || hour > 24 || day > days || month > 12) 
 			throw new InvalidFormatException();
 		if (year > date.getYear()) {
@@ -449,12 +457,16 @@ public class Company {
 		}	
 	}
 
-	public void aleatoryUsers(int many, String fn, String index) throws IOException {
+	public void aleatoryUsers(int many) throws IOException {
 		boolean contiene = false;
-		File archivo = new File(fn);
-		FileReader reader = new FileReader(archivo);
+		File file = new File("data/names.csv");
+		FileReader reader = new FileReader(file);
 		BufferedReader lector = new BufferedReader(reader);
+		File file1 = new File("data/last.csv");
+		FileReader reader1 = new FileReader(file1);
+		BufferedReader lector1 = new BufferedReader(reader1);
 		String line = lector.readLine();
+		String line1 = lector.readLine();
 		int i = 0;
 		while (line != null && !contiene && i<many) {
 			int aleatoryN =  (int) (Math.random()*5);
@@ -476,15 +488,16 @@ public class Company {
 				documentType = DocumentType.RC;
 			}
 			String dn = 10000000 + (int) (Math.random()*990000000) + "";
-			String[] datos = line.split(index);
-			String firstName = datos[0];
-			String lastName = datos[1];
+			String firstName = line;
+			String lastName = line1;
 			User newUser = new User(documentType, dn, firstName, lastName);
 			users.add(newUser);
 			i++;
 		}
 		lector.close();
 		reader.close();
+		lector1.close();
+		reader1.close();
 	}	
 		
 	
@@ -509,14 +522,14 @@ public class Company {
 
 	@SuppressWarnings("unchecked")
 	public void loadUsers() throws FileNotFoundException, IOException, ClassNotFoundException {
-		ObjectInputStream ois = new ObjectInputStream(new FileInputStream("nombre del archivo"));
+		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(SAVE_FILE_NAME));
 		users = (ArrayList<User>)ois.readObject();
 		ois.close();
 		
 	}
 
-	public void saveRooms() throws FileNotFoundException, IOException {
-		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("nombre del archivo"));
+	public void save() throws FileNotFoundException, IOException {
+		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(SAVE_FILE_NAME));
 		oos.writeObject(users);
 		oos.close();
 		
@@ -547,6 +560,23 @@ public class Company {
 					finish = true;
 				}
 			}
+			
+		}
+	}
+	
+	public void orderByLastNameSelectionSort() {
+		for (int i = 0; i < users.size()-1; i++) {
+			User min = users.get(i);
+			int position = i;
+			for (int j = i + 1 ; j < users.size(); j++) {
+				if (users.get(j).compareTo(min)>0) {
+					min = users.get(j);
+					position = j;
+				}
+			}
+			User aux = users.get(i);
+			users.set(i, min);
+			users.set(position, aux);
 		}
 	}
 
@@ -561,13 +591,71 @@ public class Company {
 	public String showTurnTypes() {
 		String msg = "";
 		for (int i = 0; i < types.size(); i++) {
-			msg += types.get(i).getName() + "\n";
+			int j = i+1;
+			msg += j+"."+ types.get(i).getName() + "\n";
 		}
 		return msg;
 	}
 
 	public void createNewType(String name, double time) {
 		types.add(new TurnType(name, time));
+		
+	}
+
+	public String attendTurn() {
+		String msg = "";
+		
+		Collections.sort(users, new UserActiveTurnCodeComparator());
+		for (int i = 0; i < users.size(); i++) {
+			if (users.get(i).isActive()) {
+				while (lastAt.compareDatesInMillis(date)>0) {
+					lastAt = lastAt.doubleToDate(users.get(i).getPersonalTurn().getType().getTime());
+					msg += "Turn "+users.get(i).getPersonalTurn().getTurn()+" of type "+users.get(i).getPersonalTurn().getType()+" request at "+users.get(i).getPersonalTurn().getDate().toString();
+					users.get(i).setActive(false);
+					lastAt = lastAt.doubleToDate(0.25);
+				}
+			}
+  		}
+		return msg;
+	}
+
+	public void turnUserFile(String fn) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public String turnUsersConsoleById() {
+		Collections.sort(users, new Comparator<User>() {
+			@Override
+			public int compare(User o1, User o2) {
+				int x = 0;
+				if (o1.getPersonalTurn().getTurn().compareTo(o2.getPersonalTurn().getTurn())>0) {
+					x = 1;
+				} else if (o1.getPersonalTurn().getTurn().compareTo(o2.getPersonalTurn().getTurn())<0) {
+					x = -1;
+				}
+				return x;
+			}
+		});
+		String msg = "";
+		for (int i = 0; i < users.size(); i++) {
+			msg += users.get(i).showInfoTurn();
+		}
+		return msg;
+	}
+
+	public String userTurnsConsole() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void userTurnsFile(String fn) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void load() {
+		// TODO Auto-generated method stub
 		
 	}
 	

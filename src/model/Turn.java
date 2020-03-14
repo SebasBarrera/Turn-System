@@ -1,6 +1,9 @@
 package model;
 
-public class Turn {
+import java.io.Serializable;
+
+@SuppressWarnings("serial")
+public class Turn implements Serializable {
 	
 	private String turn;
 	private TurnType type;
