@@ -34,7 +34,8 @@ public class Main {
 		System.out.println("6. Generate aleatory users");
 		System.out.println("7. Actualize time");
 		System.out.println("8. Show Date an Hour");
-		System.out.println("9.Save");
+		System.out.println("9. Save");
+		System.out.println("10.Create turns for days");
 		System.out.println();
 		System.out.println("0. Get out");
 	}
@@ -73,9 +74,11 @@ public class Main {
 					case 8:
 						comp.showTime();
 					break;
-
 					case 9:
 						save();
+					break;
+					case 10:
+						createTurns();
 					break;
 					case 0:
     					System.out.flush(); 
@@ -93,11 +96,25 @@ public class Main {
 			} catch (InvalidSelectionException e) {
 				System.out.println("Only numbers between 1 and 3 or 9 to get out");
 			} finally {
-				
+				comp.activeDes();
 				comp.actualizeTime();
+				comp.verifyToAttend();
 			}
 		}
 	}
+
+	private void createTurns() {
+		System.out.println("For how many days do you want to create turns? MAX 1000 days");
+		int d = sc.nextInt();
+		System.out.println("How many turns per day do you want to create? MAX 1000 turns");
+		int t = sc.nextInt();
+		try {
+			comp.attendForDays(d, t);
+		} catch (AlreadyAdvanceException e) {
+			e.getMessage();
+		}
+	}
+	
 
 	private void save() {
 		try {
@@ -312,11 +329,12 @@ public class Main {
 		String type = sc.nextLine();
 		System.out.println("Document Type: ");
 		String dt = sc.nextLine();DocumentType documentType;
+		documentType = comp.chooseType(dt);
 		System.out.print("Document Number: ");
 		String dn = sc.nextLine();
+		
 		try {
 			long initialTime = System.currentTimeMillis();
-			documentType = comp.chooseType(dt);
 			System.out.println(comp.alreadyRegist(dn,  documentType, type));
 			long finalTime = System.currentTimeMillis();
 			long time = finalTime - initialTime;

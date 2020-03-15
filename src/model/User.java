@@ -17,6 +17,7 @@ public class User implements Comparable<User>{
 	private ArrayList<Boolean> presents;
 	private int counterPresents;
 	private boolean des;
+	private long initDes;
 
 	public User(DocumentType dt, String dn, String fn, String ln) {
 		documentType = dt;
@@ -32,6 +33,7 @@ public class User implements Comparable<User>{
 		presents = new ArrayList<Boolean>();
 		setCounterPresents(0);
 		des = false;
+		initDes = 0;
 	}	
 	
 	/**
@@ -247,9 +249,41 @@ public class User implements Comparable<User>{
 		
 	}
 
+	public int typeToInt() {
+		int i = 5;
+		switch (documentType) {
+			case CC:
+				i = 0;
+			break;
+			case CE:
+				i = 1;
+			break;
+			case PA:
+				i = 2;
+			break;
+			case RC:
+				i = 3;
+			break;
+			case TI:
+				i = 4;
+		default:
+			break;
+			
+		}
+		return i;
+	}
 	public int compareById(User arg0) {
-		int ret = 0;		
-		ret = this.documentNumber.compareTo(arg0.getFirstName());	
+		int ret = 0;
+		
+		if (documentNumber.compareTo(arg0.getDocumentNumber()) > 0) {
+			ret = 1;
+		} else if (documentNumber.compareTo(arg0.getDocumentNumber()) < 0) {
+			ret = -1;
+		} else if (typeToInt() > arg0.typeToInt()) {
+			ret = 1;
+		} else if (typeToInt() < arg0.typeToInt()) {
+			ret = -1;
+		}
 		return ret;
 	}
 	
@@ -284,6 +318,14 @@ public class User implements Comparable<User>{
 	
 	public boolean getDes() {
 		return des;
+	}
+
+	public long getInitDes() {
+		return initDes;
+	}
+
+	public void setInitDes(long initDes) {
+		this.initDes = initDes;
 	}
 	
 }

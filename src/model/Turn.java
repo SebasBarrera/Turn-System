@@ -35,5 +35,6 @@ public class Turn implements Serializable {
 		this.date = date;
 	}
 	
-
+	
+ 
 }

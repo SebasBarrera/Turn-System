@@ -24,6 +24,10 @@ public class Company implements Serializable {
 	private DateAnHour date;
 	private DateAnHour lastAt;
 	private long difference;
+	private boolean advance;
+	private DateAnHour startAdvance;
+	private int t;
+	private int d;
 	/**
 	 * The constructor of the class, it will be the initial state of the program
 	 */
@@ -45,6 +49,7 @@ public class Company implements Serializable {
 	    difference = 0;
 		date = new DateAnHour(year, month, day, hour, minute, second);
 		lastAt = date;
+		advance = false;
 	}
 	
 	/**
@@ -288,9 +293,10 @@ public class Company implements Serializable {
 				user = users.get(i);
 				ward = false;
 			}
-		}
+		}	
 		if (user == null) {
 			throw new WithOutRegisterException(documentNumber, documentType);
+		
 		}
 		return user;
 	}
@@ -298,10 +304,20 @@ public class Company implements Serializable {
 	public User searchUserRegistered(String documentNumber, DocumentType documentType) 
 			throws AlreadyAddedException {
 		User user = null;
-		for (int i = 0; i < users.size(); i++) {
-			if (users.get(i).getDocumentNumber().equals(documentNumber)
-					&& users.get(i).getDocumentType().equals(documentType)) {
+		boolean ward = false;
+		int izq = 0;
+		int der = users.size()-1;
+		orderByIdBubbleSort();
+		while (izq <= der && !ward) {
+			int mid = (izq+der)/2;
+			if((users.get(mid).getDocumentNumber().equals(documentNumber) 
+					&& users.get(mid).getDocumentType().equals(documentType))) {
+				ward = true;
 				throw new AlreadyAddedException(documentNumber);
+			} else if (users.get(mid).getDocumentNumber().compareTo(documentNumber) < 0) {
+				der = mid -1;
+			} else {
+				izq = mid +1;
 			}
 		}
 		return user;
@@ -320,6 +336,8 @@ public class Company implements Serializable {
 		msg += user.getlastName();
 		return msg;
 	}
+	
+	
 	
 	public void setAddress(String address, String documentNumber, DocumentType documentType) 
 			throws WithOutRegisterException {
@@ -368,7 +386,7 @@ public class Company implements Serializable {
 				typeOf = types.get(i);
 			}
 		}
-		if (user.getPersonalTurn() == null) {
+		if (user.getPersonalTurn() == null && !user.getDes()) {
 			msg += "The assigned turn for "+userGetName(user)+" is: ";
 			advanceGivenTurn(typeOf);
 			msg += getActualTurnAttend().getTurn();
@@ -379,6 +397,56 @@ public class Company implements Serializable {
 		}
 		return msg;
 	}
+	
+	public void giveTurn(User user) {
+		int type = (int)Math.random()*types.size();
+		TurnType typeOf = types.get(type);
+		advanceGivenTurn(typeOf);
+		user.setPersonalTurn(getPreviusTurnGiven());
+		user.advanceTurn();
+		user.addToTurnList();
+		user.setActive(true);
+	}
+	
+	public void attendForDays(int d, int t) throws AlreadyAdvanceException {
+		if (advance) {
+			throw new AlreadyAdvanceException();
+		}
+		startAdvance = date;
+		this.d = d;
+		this.t = t;
+		advance = true;
+	}
+	
+	public void verifyToAttend() {
+		GregorianCalendar gc = new GregorianCalendar();
+		GregorianCalendar startgc = new GregorianCalendar();
+		gc.set(startAdvance.getYear(), startAdvance.getMonth(), startAdvance.getDay(), startAdvance.getHour(), startAdvance.getMinute(), startAdvance.getSecond());
+		gc.set(date.getYear(), date.getMonth(), date.getDay(), date.getHour(), date.getMinute(), date.getSecond());
+		int counterT = 0;
+		int counterD = 0;
+		while (d >= 0 && counterD != 10001) {
+			gc.roll(Calendar.DAY_OF_YEAR, 1);
+			if (gc.compareTo(startgc)<=0) {
+				while (t >= 0 && counterT != 10001) {
+					int i = (int)Math.random()*users.size();
+						if (users.get(i).getPersonalTurn() != null && !users.get(i).getDes()) {
+							giveTurn(users.get(i));
+							t--;
+							if (t == 0) {
+								d--;
+							}
+						}
+					counterT++;
+				}
+			}
+			counterD++;
+		}
+		if(d == 0 && t == 0) {
+			advance = false;
+		}
+	}
+	
 	
 
 	public String showTurns() {
@@ -684,14 +752,13 @@ public class Company implements Serializable {
 
 	public void createNewType(String name, double time) {
 		types.add(new TurnType(name, time));
-		
 	}
 
 	public String attendTurn() {
 		String msg = "";
 		Collections.sort(users, new UserActiveTurnCodeComparator());
 		for (int i = 0; i < users.size(); i++) {
-			if (users.get(i).isActive() && !users.get(i).getDes()) {
+			if (users.get(i).isActive()) {
 				while (lastAt.compareDatesInMillis(date)>0) {
 					lastAt = lastAt.doubleToDate(users.get(i).getPersonalTurn().getType().getTime());
 					msg += "Turn "+users.get(i).getPersonalTurn().getTurn()+" of type "+users.get(i).getPersonalTurn().getType()+" request at "+users.get(i).getPersonalTurn().getDate().toString();
@@ -703,19 +770,27 @@ public class Company implements Serializable {
 					} else {
 						users.get(i).addToPresentList(false);
 						msg = "was no present when we call the turn";
+						users.get(i).advanceNoPresent();
 					}
 					if (users.get(i).getCounterPresents() == 2) {
 						users.get(i).deshabilitar();
+						users.get(i).setCounterPresents(0);
 					}
 				}
 			}
-					lastAt = lastAt.doubleToDate(0.25);
+			lastAt = lastAt.doubleToDate(0.25);
 		}
 		return msg;
 	}
 	
 	public void activeDes() {
-		//	TODO GUARDAR TIEMPO EN EL QUE SE DESHABILITO EL USUARIO, Y CONTAR DOS DIAS PARA HABILITARLO
+		for (int i = 0; i < users.size(); i++) {
+			if (users.get(i).getDes()) {
+				if (users.get(i).getInitDes() >= 1.728e+8) {
+					users.get(i).habilitar();
+				}
+			}
+		}
 	}
   	
 	public void turnUserFile(String fn) throws FileNotFoundException {
@@ -786,6 +861,14 @@ public class Company implements Serializable {
 			pw.print(counter+". "+ users.get(i).showInfoTurn());
 		}
 		pw.close();
+	}
+
+	public boolean isAdvance() {
+		return advance;
+	}
+
+	public void setAdvance(boolean advance) {
+		this.advance = advance;
 	}
 	
 }
