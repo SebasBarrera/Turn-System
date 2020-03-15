@@ -1,5 +1,6 @@
 package ui;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import customExceptions.*;
@@ -33,8 +34,7 @@ public class Main {
 		System.out.println("6. Generate aleatory users");
 		System.out.println("7. Actualize time");
 		System.out.println("8. Show Date an Hour");
-		System.out.println("9. Load");
-		System.out.println("10.Save");
+		System.out.println("9.Save");
 		System.out.println();
 		System.out.println("0. Get out");
 	}
@@ -73,10 +73,8 @@ public class Main {
 					case 8:
 						comp.showTime();
 					break;
+
 					case 9:
-						load();
-					break;
-					case 10:
 						save();
 					break;
 					case 0:
@@ -99,13 +97,6 @@ public class Main {
 				comp.actualizeTime();
 			}
 		}
-	}
-
-	
-
-	private void load() {
-		comp.load();
-		
 	}
 
 	private void save() {
@@ -135,7 +126,6 @@ public class Main {
 	}
 
 	private void manual() {
-		
 		System.out.println("If you want the same year, month, day or hour that the system have, pls only digit number 0 in the correspondient space");
 		System.out.print("Year: ");
 		int year = sc.nextInt();sc.nextLine();
@@ -169,7 +159,7 @@ public class Main {
 
 
 	private void aleatoryUsers() {
-		System.out.println("How many user do you want to create? // less than a thousand please");
+		System.out.println("How many user do you want to create? ");
 		int many = sc.nextInt();
 		long initialTime = System.currentTimeMillis();
 		try {
@@ -185,8 +175,8 @@ public class Main {
 
 	private void reportTypes() throws InvalidSelectionException, InputMismatchException {
 		System.out.println("what type of report do you want to generate?");
-		System.out.println("1. With all turn that a user have been taked");
-		System.out.println("2. With all user that have the same code");
+		System.out.println("1. With all turns that a user have been taked");
+		System.out.println("2. With all users that have the same code");
 		int option = sc.nextInt();
 		System.out.println("Do you want to see de report in:");
 		System.out.println("1. Console");
@@ -206,13 +196,16 @@ public class Main {
 	
 		long initialTime = System.currentTimeMillis();
 		if (type == 1) {
-			System.out.println("By what characteristic do you want to order it");
-			
-			System.out.println(comp.turnUsersConsole());
+			System.out.println(comp.userTurnsConsole());
 		}else if(type ==2) {
 			System.out.println("Write the file name");
 			String fn = sc.nextLine();
-			comp.turnUserFile(fn);
+			try {
+				comp.turnUserFile(fn);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}else {
 			throw new InvalidSelectionException(type);
 		}
@@ -229,22 +222,24 @@ public class Main {
 			System.out.println("Order by:");
 			System.out.println("1.code");
 			System.out.println("2.attend");
-			System.out.println("3.present");
 			int i = sc.nextInt();
 			if (i == 1) {
 				System.out.println(comp.turnUsersConsoleByCode());
 			}else if(i ==2) {
 				System.out.println(comp.turnUsersConsoleByattend());
-			} if (i==3) {
-				System.out.println(comp.turnUsersConsoleByPresent());			
-			}else {
+			} else {
 				throw new InvalidSelectionException(type);
 			}
 			System.out.println(comp.userTurnsConsole());
 		}else if(type ==2) {
 			System.out.println("Write the file name");
 			String fn = sc.nextLine();
-			comp.userTurnsFile(fn);
+			try {
+				comp.userTurnsFile(fn);
+			} catch (FileNotFoundException e) {
+				e.getMessage();
+			}
+			
 		}else {
 			throw new InvalidSelectionException(type);
 		}

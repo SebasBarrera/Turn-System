@@ -15,6 +15,8 @@ public class User implements Comparable<User>{
 	private ArrayList<String> turns;
 	private boolean active;
 	private ArrayList<Boolean> presents;
+	private int counterPresents;
+	private boolean des;
 
 	public User(DocumentType dt, String dn, String fn, String ln) {
 		documentType = dt;
@@ -28,6 +30,8 @@ public class User implements Comparable<User>{
 		turns = new ArrayList<String>();
 		active = false;
 		presents = new ArrayList<Boolean>();
+		setCounterPresents(0);
+		des = false;
 	}	
 	
 	/**
@@ -199,24 +203,15 @@ public class User implements Comparable<User>{
 	public String toString() {
 		String msg  = "";
 		String turn = "";
-		
+		msg += "===============================================";
 		msg += "DocumentType:    "+documentType+"\nComplete name:   "+firstName+" "+lastName + "\n";
-		if (phoneNumber == "") {
+		if (phoneNumber != "") {
 			msg +="\nPhoneNumber:   "+phoneNumber;
 		}
-		if (personalTurn != null || (active && counterTurns>0)) {
-			turn = "\nTurn:            "+getTurn();
+		if (address != "") {
+			msg += "\nAddress:       "+address;
 		}
-		if (counterTurns!=0 && !active) {
-			for (int i = 0; i < counterTurns; i++) {
-				msg+= "\nThe user ";
-				if (presents.get(i)) {
-					msg += "was attended in the turn: " + turns.get(i);
-				} else {
-					msg += "was not present when we called him in the turn: "+ turns.get(i);
-				} 
-			}
-		}
+		msg += "===============================================";
 		msg+= turn+"\n";
 		return msg;
 	}
@@ -224,7 +219,17 @@ public class User implements Comparable<User>{
 	public String showInfoTurn() {
 		String msg = "";
 		for (int i = 0; i < turns.size(); i++) {
-			msg
+			msg = "Turn: "+turns.get(i)+" Active: "; 
+			if (i == turns.size()-1 && isActive()) {
+				msg += "yes ";
+			} else {
+				msg += "no ";
+			}
+			if (presents.get(i)) {
+				msg += "was attended in the turn: " + turns.get(i);
+			} else {
+				msg += "was not present when we called him in the turn: "+ turns.get(i);
+			} 
 		}
 		return msg;
 	}
@@ -255,6 +260,30 @@ public class User implements Comparable<User>{
 	@Override
 	public int compareTo(User o) {
 		return this.lastName.compareTo(o.getLastName());
+	}
+
+	public int getCounterPresents() {
+		return counterPresents;
+	}
+
+	public void setCounterPresents(int counterPresents) {
+		this.counterPresents = counterPresents;
+	}
+	
+	public void advanceNoPresent() {
+		counterPresents++;
+	}
+
+	public void deshabilitar() {
+		des = true;	
+	}
+	
+	public void habilitar() {
+		des = false;
+	}
+	
+	public boolean getDes() {
+		return des;
 	}
 	
 }

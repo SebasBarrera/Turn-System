@@ -458,7 +458,6 @@ public class Company implements Serializable {
 	}
 
 	public void aleatoryUsers(int many) throws IOException {
-		boolean contiene = false;
 		File file = new File("data/names.csv");
 		FileReader reader = new FileReader(file);
 		BufferedReader lector = new BufferedReader(reader);
@@ -468,28 +467,114 @@ public class Company implements Serializable {
 		String line = lector.readLine();
 		String line1 = lector.readLine();
 		int i = 0;
-		while (line != null && !contiene && i<many) {
+		while (line != null && i<many) {
 			int aleatoryN =  (int) (Math.random()*5);
 			DocumentType documentType = null;
 			switch (aleatoryN) {
-			case 0:
-				documentType = DocumentType.CC;
-			break;
-			case 1:
-				documentType = DocumentType.CE;
-			break;
-			case 2:
-				documentType = DocumentType.TI;
-			break;
-			case 3:
-				documentType = DocumentType.PA;
-			break;
-			case 4:
-				documentType = DocumentType.RC;
+				case 0:
+					documentType = DocumentType.CC;
+				break;
+				case 1:
+					documentType = DocumentType.CE;
+				break;
+				case 2:
+					documentType = DocumentType.TI;
+				break;
+				case 3:
+					documentType = DocumentType.PA;
+				break;
+				case 4:
+					documentType = DocumentType.RC;
 			}
 			String dn = 10000000 + (int) (Math.random()*990000000) + "";
-			String firstName = line;
-			String lastName = line1;
+			String[] names = line.split(" ");
+			String[] lasts = line1.split(" ");
+			String firstName = names[0];		 		
+ 			String lastName = lasts[0];
+			User newUser = new User(documentType, dn, firstName, lastName);
+			users.add(newUser);
+			i++;
+		}
+		while (line != null && i < many) {
+			int aleatoryN =  (int) (Math.random()*5);
+			DocumentType documentType = null;
+			switch (aleatoryN) {
+				case 0:
+					documentType = DocumentType.CC;
+				break;
+				case 1:
+					documentType = DocumentType.CE;
+				break;
+				case 2:
+					documentType = DocumentType.TI;
+				break;
+				case 3:
+					documentType = DocumentType.PA;
+				break;
+				case 4:
+					documentType = DocumentType.RC;
+			}
+			String dn = 10000000 + (int) (Math.random()*990000000) + "";
+			String[] names = line.split(" ");
+			String[] lasts = line1.split(" ");
+			String firstName = names[1];		 		
+ 			String lastName = lasts[1];
+			User newUser = new User(documentType, dn, firstName, lastName);
+			users.add(newUser);
+			i++;
+		}
+		while (line != null && i < many) {
+			int aleatoryN =  (int) (Math.random()*5);
+			DocumentType documentType = null;
+			switch (aleatoryN) {
+				case 0:
+					documentType = DocumentType.CC;
+				break;
+				case 1:
+					documentType = DocumentType.CE;
+				break;
+				case 2:
+					documentType = DocumentType.TI;
+				break;
+				case 3:
+					documentType = DocumentType.PA;
+				break;
+				case 4:
+					documentType = DocumentType.RC;
+			}
+			String dn = 10000000 + (int) (Math.random()*990000000) + "";
+			String[] names = line.split(" ");
+			String[] lasts = line1.split(" ");
+			String firstName = names[0];		 		
+ 			String lastName = lasts[1];
+			User newUser = new User(documentType, dn, firstName, lastName);
+			users.add(newUser);
+			i++;
+		}
+		while (line != null && i < many) {
+			int aleatoryN =  (int) (Math.random()*5);
+			DocumentType documentType = null;
+			switch (aleatoryN) {
+				case 0:
+					documentType = DocumentType.CC;
+				break;
+				case 1:
+					documentType = DocumentType.CE;
+				break;
+				case 2:
+					documentType = DocumentType.TI;
+				break;
+				case 3:
+					documentType = DocumentType.PA;
+				break;
+				case 4:
+					documentType = DocumentType.RC;
+			}
+			String dn = 10000000 + (int) (Math.random()*990000000) + "";
+			String[] names = line.split(" ");
+			String[] lasts = line1.split(" ");
+			String firstName = names[1];		 		
+ 			String lastName = lasts[0];
 			User newUser = new User(documentType, dn, firstName, lastName);
 			users.add(newUser);
 			i++;
@@ -604,27 +689,46 @@ public class Company implements Serializable {
 
 	public String attendTurn() {
 		String msg = "";
-		
 		Collections.sort(users, new UserActiveTurnCodeComparator());
 		for (int i = 0; i < users.size(); i++) {
-			if (users.get(i).isActive()) {
+			if (users.get(i).isActive() && !users.get(i).getDes()) {
 				while (lastAt.compareDatesInMillis(date)>0) {
 					lastAt = lastAt.doubleToDate(users.get(i).getPersonalTurn().getType().getTime());
 					msg += "Turn "+users.get(i).getPersonalTurn().getTurn()+" of type "+users.get(i).getPersonalTurn().getType()+" request at "+users.get(i).getPersonalTurn().getDate().toString();
 					users.get(i).setActive(false);
-					lastAt = lastAt.doubleToDate(0.25);
+					int present = (int)Math.random()*2;
+					if (present == 1) {
+						users.get(i).addToPresentList(true);
+						msg = "The user has been attended.\n";
+					} else {
+						users.get(i).addToPresentList(false);
+						msg = "was no present when we call the turn";
+					}
+					if (users.get(i).getCounterPresents() == 2) {
+						users.get(i).deshabilitar();
+					}
 				}
 			}
-  		}
+					lastAt = lastAt.doubleToDate(0.25);
+		}
 		return msg;
 	}
-
-	public void turnUserFile(String fn) {
-		// TODO Auto-generated method stub
-		
+	
+	public void activeDes() {
+		//	TODO GUARDAR TIEMPO EN EL QUE SE DESHABILITO EL USUARIO, Y CONTAR DOS DIAS PARA HABILITARLO
+	}
+  	
+	public void turnUserFile(String fn) throws FileNotFoundException {
+		PrintWriter pw = new PrintWriter(fn);
+		int counter;
+		for (int i = 0; i < users.size(); i++) {
+			counter = i+1;
+			pw.print(counter+". "+ users.get(i).toString());
+		}
+		pw.close();
 	}
 
-	public String turnUsersConsoleById() {
+	public String turnUsersConsoleByCode() {
 		Collections.sort(users, new Comparator<User>() {
 			@Override
 			public int compare(User o1, User o2) {
@@ -643,23 +747,45 @@ public class Company implements Serializable {
 		}
 		return msg;
 	}
+	
+	public String turnUsersConsoleByattend() {
+		String msg = "";
+		Comparator<User> reverse = Collections.reverseOrder();
+		Collections.sort(users, new Comparator<User>() {
+			@Override
+			public int compare(User o1, User o2) {
+				int x = 0;
+				if (!o1.isActive() && o2.isActive()) {
+					x = -1;
+				} else if (o1.isActive() && !o2.isActive()) {
+					x = 1;
+				}
+				return x;
+			}
+		});
+		Collections.sort(users, reverse);
+		for (int i = 0; i < users.size(); i++) {
+			msg += users.get(i).showInfoTurn();
+		}
+		return msg;
+	}
 
 	public String userTurnsConsole() {
-		// TODO Auto-generated method stub
-		return null;
+		String msg = "";
+		for (int i = 0; i < users.size(); i++) {
+			msg += users.get(i).toString();
+		}
+		return msg;
 	}
 
-	public void userTurnsFile(String fn) {
-		// TODO Auto-generated method stub
-		
+	public void userTurnsFile(String fn) throws FileNotFoundException {
+		PrintWriter pw = new PrintWriter(fn);
+		int counter;
+		for (int i = 0; i < users.size(); i++) {
+			counter = i+1;
+			pw.print(counter+". "+ users.get(i).showInfoTurn());
+		}
+		pw.close();
 	}
-
-	public void load() {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	
-	
 	
 }
