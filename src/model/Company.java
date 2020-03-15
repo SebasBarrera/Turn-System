@@ -273,6 +273,8 @@ public class Company implements Serializable {
 					ward = true;
 				}
 			}else {
+				if (users.get(i).getTurn().equals(turn)) 
+					users.get(i).addToPresentList(false);
 				msg = "The user has not been attended, but you can attend the next turn.\n";
 			}
 			
@@ -786,7 +788,7 @@ public class Company implements Serializable {
 	public void activeDes() {
 		for (int i = 0; i < users.size(); i++) {
 			if (users.get(i).getDes()) {
-				if (users.get(i).getInitDes() >= 1.728e+8) {
+				if (System.currentTimeMillis() - users.get(i).getInitDes() >= 1.728e+8) {
 					users.get(i).habilitar();
 				}
 			}
